@@ -1,4 +1,3 @@
-json
 datetime
 python-telegram-bot
 requests
