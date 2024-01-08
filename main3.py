@@ -777,7 +777,7 @@ def photo(update, context: CallbackContext) -> int:
         message_text = (
             "Опублікувати наступну адресу?\n"
             f"{user_data[user_id].get('EXACT_ADDRESS')}\n"
-            f"{if user_data[user_id].get('DETAILS').strip() != '' else None}\n"
+            f"{user_data[user_id].get('DETAILS', '').strip() or None}\n"
             f"{user_data[user_id].get('city')}\n"
             f"{photo_status}\n"
             f"{user_data[user_id]['DATE_TIME']}\n"
