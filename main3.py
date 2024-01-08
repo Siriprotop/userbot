@@ -396,15 +396,12 @@ def button(update: Update, context: CallbackContext) -> None:
         save_user_data(user_id)  # Pass user_id to function
         if user_data[user_id]['DETAILS']:
             message_text = (
-                    "Опублікувати наступну адресу?\n"
-                    f"{user_data[user_id_to_edit].get('EXACT_ADDRESS')}\n"
-                    f"{user_data[user_id_to_edit].get('DETAILS')}\n"
-                    f"{user_data[user_id_to_edit].get('DATE_TIME')}\n"
-                    f"{user_data[user_id_to_edit].get('city')}\n"
-                    f"{user_data[user_id_to_edit].get('user_id')}\n"
-                    f"{photo_status}\n"
-                    f"{formatted_date}\n"
-                    f"{user_id_to_edit}"
+                "Опублікувати наступну адресу?\n"
+                f"{user_data[user_id]['EXACT_ADDRESS']}\n"
+                f"{user_data[user_id]['DETAILS']}\n"
+                f"{user_data[user_id]['DATE_TIME']}\n"
+                f"{user_data[user_id]['city']}\n"
+                f"{user_id}\n"
             )
             keyboard = [
                 [
@@ -426,8 +423,7 @@ def button(update: Update, context: CallbackContext) -> None:
                 "Опублікувати наступну адресу?\n"
                 f"{user_data[user_id]['EXACT_ADDRESS']}\n"
                 f"{user_data[user_id]['DATE_TIME']}\n"
-                f"{user_data[user_id].get('user_id')}\n"
-                f"{formatted_date}\n"
+                f"{user_data[user_id]['city']}\n"
                 f"{user_id}\n"
             )
             keyboard = [
@@ -782,11 +778,9 @@ def photo(update, context: CallbackContext) -> int:
             "Опублікувати наступну адресу?\n"
             f"{user_data[user_id].get('EXACT_ADDRESS')}\n"
             f"{user_data[user_id].get('DETAILS')}\n"
-            f"{user_data[user_id].get('DATE_TIME')}\n"
             f"{user_data[user_id].get('city')}\n"
-            f"{user_data[user_id].get('user_id')}\n"
             f"{photo_status}\n"
-            f"{formatted_date}\n"
+            f"{user_data[user_id]['DATE_TIME']}\n"
             f"{user_id}\n"
         )
 
