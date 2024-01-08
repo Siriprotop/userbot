@@ -300,7 +300,7 @@ def button(update: Update, context: CallbackContext) -> None:
                 city_to_check = user_data[user_id_to_edit]['city']
                 address = user_data[user_id_to_edit]['EXACT_ADDRESS']
                 details = user_data[user_id_to_edit].get('DETAILS', '')
-                photo = user_data[user_id_to_edit].get('PHOTO', '')
+                user_data[user_id_to_edit].pop('PHOTO', None)
                 date_time = user_data[user_id_to_edit].get('DATE_TIME', '')
 
                 for uid, data in user_data.items():
@@ -342,7 +342,7 @@ def button(update: Update, context: CallbackContext) -> None:
                                     try:
                                         context.bot.send_message(
                                         chat_id=user,
-                                        text=format_message(address, details, photo, date_time)
+                                        text=format_message(address, details, date_time)
                                         )
                                     except telegram.error.BadRequest as e:
                                         print(e)
@@ -563,7 +563,7 @@ def button(update: Update, context: CallbackContext) -> None:
                                     file.seek(0)
                                     json.dump(data, file, ensure_ascii=False)
                                     file.truncate()
-
+                                    query.edit_message_text(text="This post has already been published.")
                             except FileNotFoundError:
                                 # Handle the case where the city file does not exist
                                 with open(file_name, 'w', encoding='utf-8') as file:
@@ -727,6 +727,7 @@ def updaterPhoto(update: Update, context: CallbackContext) -> int:
                                     file.seek(0)
                                     json.dump(data, file, ensure_ascii=False)
                                     file.truncate()
+                                    query.edit_message_text(text="This post has already been published.")
 
                             except FileNotFoundError:
                                 # Handle the case where the city file does not exist
