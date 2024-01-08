@@ -223,39 +223,55 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
+    city_file = context.user_data.get('city_file')
     message = update.message
-    city_file_name = context.user_data.get('city_file')  # Получаем имя файла
 
-    # Находим соответствующее название города
-    print(city_file_name)
-    city_name = None
-    for file_name, city in file_to_channel_id.items():
-        if file_name == city_file_name:
-            city_name = city
-            print(city_name)
-            break
-
-    # Проверка на наличие текста, фото и документа (как в вашем предыдущем коде)
+    if not city_file:
+        update.message.reply_text("No city file found.")
+        return ConversationHandler.END
+    # Проверка на наличие текста в сообщении
+    if message.text:
+        content = message.text
+    else:
+        content = None
 
     try:
-        if message.text and photo:
-            # Отправка текста и фото
-            context.bot.send_photo(chat_id=city_name, photo=photo, caption=message.text)
-        elif message.text:
-            # Отправка только текста
-            context.bot.send_message(chat_id=city_name, text=message.text)
-        elif photo:
-            # Отправка только фото
-            context.bot.send_photo(chat_id=city_name, photo=photo)
-        elif document:
-            # Отправка только документа
-            context.bot.send_document(chat_id=city_name, document=document)
-    except telegram.error.BadRequest as e:
-        print(f"Failed to send message to channel {channel_id} for city {city_name}: {e}")
+        with open(city_file, 'r', encoding='utf-8') as file:
+            users_data = json.load(file)
+    # Проверка на наличие фото
+    if message.photo:
+        photo = message.photo[-1].file_id  # Берем последнее фото (самое большое)
+    else:
+        photo = None
+    # Проверка на наличие документа
+    if message.document:
+        document = message.document.file_id
+    else:
+        document = None
 
-    update.message.reply_text(f"Сообщение отправлено в канал города {city_name}.")
+        update.message.reply_text(f"Content sent to users in {city_file}.")
+    except Exception as e:
+        update.message.reply_text(f"Failed to send messages: {e}")
+    for file, channel_id in file_to_channel_id.items():
+        if file == city_file:
+            try:
+                if content and photo:
+                    # Отправка текста и фото
+                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+                elif content:
+                    # Отправка только текста
+                    context.bot.send_message(chat_id=channel_id, text=content)
+                elif photo:
+                    # Отправка только фото
+                    context.bot.send_photo(chat_id=channel_id, photo=photo)
+                elif document:
+                    # Отправка только документа
+                    context.bot.send_document(chat_id=channel_id, document=document)
+            except telegram.error.BadRequest as e:
+                print(f"Failed to send message to channel {channel_id} for city {file}: {e}")
+
+    update.message.reply_text(f"Content sent to {channel_id} channel.")
     return ConversationHandler.END
-
 
 
 
