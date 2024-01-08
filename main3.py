@@ -11,6 +11,31 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+    city_channels = {
+        "Київ": '-1002009215054',
+        "Харків": '-1001990345559',
+        "Одеса": '-1002018743530',
+        "Львів": '-1002011256616',
+        "Дніпро": '-1002002447389',
+        "Херсон": '-1002074975452',
+        "Вінниця": '-1002039986567',
+        "Чернігів": '-1002036937534',
+        "Ужгород": '-1002004066415',
+        "Полтава": '-1002141539514',
+        "Хмельницький": '-1001777761375',
+        "Луцьк": '-1002009986196',
+        "Тернопіль": '-1002102395207',
+        "Кропивницький": '-1002131249827',
+        "Житомир": '-1002016456677',
+        "Суми": '-1002105965919',
+        "Черкаси": '-1002077464146',
+        "Чернівці": '-1002035929578',
+        "Рівне": '-1002101920363',
+        "Кривий Ріг": '-1002024876100',
+        "Івано-Франківськ": '-1002077710288',
+        "Миколаїв": '-1002005889645',
+        "Запоріжжя": '-1002062185937'
+    }
 EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
 
 user_data = {}
@@ -153,31 +178,6 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
     message = update.message.text
 
     # Словарь каналов и их тегов
-    city_channels = {
-        "Київ": '-1002009215054',
-        "Харків": '-1001990345559',
-        "Одеса": '-1002018743530',
-        "Львів": '-1002011256616',
-        "Дніпро": '-1002002447389',
-        "Херсон": '-1002074975452',
-        "Вінниця": '-1002039986567',
-        "Чернігів": '-1002036937534',
-        "Ужгород": '-1002004066415',
-        "Полтава": '-1002141539514',
-        "Хмельницький": '-1001777761375',
-        "Луцьк": '-1002009986196',
-        "Тернопіль": '-1002102395207',
-        "Кропивницький": '-1002131249827',
-        "Житомир": '-1002016456677',
-        "Суми": '-1002105965919',
-        "Черкаси": '-1002077464146',
-        "Чернівці": '-1002035929578',
-        "Рівне": '-1002101920363',
-        "Кривий Ріг": '-1002024876100',
-        "Івано-Франківськ": '-1002077710288',
-        "Миколаїв": '-1002005889645',
-        "Запоріжжя": '-1002062185937'
-    }
 
     # Проходим по всем каналам и отправляем сообщение
     for city, channel_username in city_channels.items():
@@ -507,78 +507,20 @@ def button(update: Update, context: CallbackContext) -> None:
             photo = user_data[user_id_to_edit].get('PHOTO', '')
             date_time = user_data[user_id_to_edit].get('DATE_TIME', '')
 
-            for uid, data in user_data.items():
-                if data.get('city') == city_to_check:
-                    try:
-                        context.bot.send_message(
-                            chat_id=uid,
-                            text=format_message(address, details, photo, date_time)
-                        )
-                        query.edit_message_text(text="This post has already been published.")
-                        city_files = {
-                            "Київ": "Kyiv.json",
-                            "Харків": "Kharkiv.json",
-                            "Одеса": "Odesa.json",
-                            "Львів": "Lviv.json",
-                            "Дніпро": "Dnipro.json",
-                            "Запоріжжя": "Zaporizhzhia.json",
-                            "Миколаїв": "Mykolaiv.json",
-                            "Івано-Франківськ": "Ivano-Frankivsk.json",
-                            "Кривий Ріг": "Kryvyi Rih.json",
-                            "Рівне": "Rivne.json",
-                            "Чернівці": "Chernivtsi.json",
-                            "Черкаси": "Cherkasy.json",
-                            "Суми": "Sumy.json",
-                            "Житомир": "Zhytomyr.json",
-                            "Кропивницький": "Kropyvnytskyi.json",
-                            "Тернопіль": "Ternopil.json",
-                            "Луцьк": "Lutsk.json",
-                            "Хмельницький": "Khmelnytskyi.json",
-                            "Полтава": "Poltava.json",
-                            "Ужгород": "Uzhhorod.json",
-                            "Чернігів": "Chernihiv.json",
-                            "Вінниця": "Vinnytsia.json",
-                            "Херсон": "Kherson.json",
-                        }
-                        city_file = city_files.get(city_to_check, None)
-
-                        if city_file:
-                            try:
-                                with open(city_file, 'r', encoding='utf-8') as file:
-                                    try:
-                                        data = json.load(file)
-                                    except json.decoder.JSONDecodeError:
-                                        data = {"announcements": []}  # Initialize if the file is empty or corrupt
-
-                                    # Create a new announcement entry
-                                    announcement = {
-                                        "user_id": user_id,
-                                        "address": user_data[user_id].get('EXACT_ADDRESS', ''),
-                                        "details": user_data[user_id].get('DETAILS', ''),
-                                        "photo": user_data[user_id].get('PHOTO', ''),
-                                        "date_time": user_data[user_id].get('DATE_TIME', '')
-                                    }
-
-                                    # Append the new announcement to the announcements list
-                                    data["announcements"].append(announcement)
-
-                                    # Write updated data back to the file
-                                    file.seek(0)
-                                    json.dump(data, file, ensure_ascii=False)
-                                    file.truncate()
-                            
-                            except FileNotFoundError:
-                                # Handle the case where the city file does not exist
-                                with open(file_name, 'w', encoding='utf-8') as file:
-                                    json.dump({"announcements": [announcement]}, file, ensure_ascii=False)
-
-
-                    except Exception as e:
-                        print(f"Не удалось отправить сообщение пользователю {uid}: {e}")
-
+            city_channel = city_channels.get(city_to_check)
+            if city_channel:
+                try:
+                    context.bot.send_message(
+                        chat_id=city_channel,
+                        text=format_message(address, details, photo, date_time)
+                    )
+                    query.edit_message_text(text="This post has already been published.")
+                except Exception as e:
+                    print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
             else:
-                query.answer(text="Данные для рассылки не найдены.")
-        
+                query.answer(text="Канал для данного города не найден.")
+
+            
     else:
         user_data[user_id]['city'] = query.data
         print("City set to:", user_data[user_id]['city'])  # Debug print
