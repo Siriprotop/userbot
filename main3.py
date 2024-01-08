@@ -36,6 +36,33 @@ city_channels = {
     "Миколаїв": '-1002005889645',
     "Запоріжжя": '-1002062185937'
 }
+
+file_to_channel_id = {
+    "Kyiv.json": '-1002009215054',
+    "Kharkiv.json": '-1001990345559',
+    "Odesa.json": '-1002018743530',
+    "Lviv.json": '-1002011256616',
+    "Dnipro.json": '-1002002447389',
+    "Zaporizhzhia.json": '-1002062185937',
+    "Mykolaiv.json": '-1002005889645',
+    "Ivano-Frankivsk.json": '-1002077710288',
+    "Kryvyi Rih.json": '-1002024876100',
+    "Rivne.json": '-1002101920363',
+    "Chernivtsi.json": '-1002035929578',
+    "Cherkasy.json": '-1002077464146',
+    "Sumy.json": '-1002105965919',
+    "Zhytomyr.json": '-1002016456677',
+    "Kropyvnytskyi.json": '-1002131249827',
+    "Ternopil.json": '-1002102395207',
+    "Lutsk.json": '-1002009986196',
+    "Khmelnytskyi.json": '-1001777761375',
+    "Poltava.json": '-1002141539514',
+    "Uzhhorod.json": '-1002004066415',
+    "Chernihiv.json": '-1002036937534',
+    "Vinnytsia.json": '-1002039986567',
+    "Kherson.json": '-1002074975452'
+}
+
 EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
 
 user_data = {}
@@ -197,7 +224,14 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     message = update.message
-    city_name = context.user_data.get('city_file')  # Получаем название города
+    city_file_name = context.user_data.get('city_file')  # Получаем имя файла
+
+    # Находим соответствующее название города
+    city_name = None
+    for city, file_name in city_files.items():
+        if file_name == city_file_name:
+            city_name = city
+            break
 
     if not city_name or city_name not in city_channels:
         update.message.reply_text("Город не выбран или отсутствует в списке.")
