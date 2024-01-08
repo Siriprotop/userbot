@@ -229,48 +229,40 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     if not city_file:
         update.message.reply_text("No city file found.")
         return ConversationHandler.END
-    # Проверка на наличие текста в сообщении
+
     if message.text:
         content = message.text
     else:
         content = None
 
-    try:
-        with open(city_file, 'r', encoding='utf-8') as file:
-            users_data = json.load(file)
-    # Проверка на наличие фото
     if message.photo:
-        photo = message.photo[-1].file_id  # Берем последнее фото (самое большое)
+        photo = message.photo[-1].file_id
     else:
         photo = None
-    # Проверка на наличие документа
+
     if message.document:
         document = message.document.file_id
     else:
         document = None
 
+    try:
+        with open(city_file, 'r', encoding='utf-8') as file:
+            users_data = json.load(file)
+
+        for file, channel_id in users_data.items():
+            if content and photo:
+                context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+            elif content:
+                context.bot.send_message(chat_id=channel_id, text=content)
+            elif photo:
+                context.bot.send_photo(chat_id=channel_id, photo=photo)
+            elif document:
+                context.bot.send_document(chat_id=channel_id, document=document)
+
         update.message.reply_text(f"Content sent to users in {city_file}.")
     except Exception as e:
         update.message.reply_text(f"Failed to send messages: {e}")
-    for file, channel_id in file_to_channel_id.items():
-        if file == city_file:
-            try:
-                if content and photo:
-                    # Отправка текста и фото
-                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
-                elif content:
-                    # Отправка только текста
-                    context.bot.send_message(chat_id=channel_id, text=content)
-                elif photo:
-                    # Отправка только фото
-                    context.bot.send_photo(chat_id=channel_id, photo=photo)
-                elif document:
-                    # Отправка только документа
-                    context.bot.send_document(chat_id=channel_id, document=document)
-            except telegram.error.BadRequest as e:
-                print(f"Failed to send message to channel {channel_id} for city {file}: {e}")
-
-    update.message.reply_text(f"Content sent to {channel_id} channel.")
+    
     return ConversationHandler.END
 
 
