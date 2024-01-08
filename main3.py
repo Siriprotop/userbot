@@ -408,7 +408,7 @@ def button(update: Update, context: CallbackContext) -> None:
 
         if user_id_to_edit in user_data:
             post_id = user_data[user_id_to_edit].get('POST_ID')
-            query.edit_message_text(post_id, "This post has already been published.")
+            query.edit_message_text(post_id, text="This post has already been published.")
             context.user_data['EDIT_USER_ID'] = user_id_to_edit
             user_data[user_id]['EDIT_USER_ID'] = user_id_to_edit
             user_data[user_id]['is_editing'] = True
