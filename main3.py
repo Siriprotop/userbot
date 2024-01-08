@@ -223,7 +223,6 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
-def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     city_file = context.user_data.get('city_file')
     message = update.message
 
