@@ -316,7 +316,7 @@ def button(update: Update, context: CallbackContext) -> None:
                             chat_id=city_channel,
                             text=format_without_photo(address, details, date_time)
                         )
-                        query.edit_message_text(text="This post has already been published.")
+                        query.edit_message_text(post_id, "This post has already been published.")
                         return ConversationHandler.END
                     except Exception as e:
                         print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
@@ -391,12 +391,6 @@ def button(update: Update, context: CallbackContext) -> None:
     if query.data.startswith('no_'):
         user_id_to_delete = int(query.data[3:])
         post_id = user_data[user_id_to_delete].get('POST_ID')
-        
-        # Check if the post has already been published, if so notify and end
-        if post_id in published_posts:
-            query.edit_message_text(text="This post has already been published.")
-            published_posts.discard(post_id)
-            return ConversationHandler.END
 
         # If the post is not published, then handle the rejection normally
         user_data.pop(user_id_to_delete, None)
@@ -414,11 +408,7 @@ def button(update: Update, context: CallbackContext) -> None:
 
         if user_id_to_edit in user_data:
             post_id = user_data[user_id_to_edit].get('POST_ID')
-            if post_id in published_posts:
-                query.edit_message_text(text="This post has already been published.")
-                published_posts.discard(post_id)
-                return ConversationHandler.END
-            published_posts.add(post_id)
+            query.edit_message_text(post_id, "This post has already been published.")
             context.user_data['EDIT_USER_ID'] = user_id_to_edit
             user_data[user_id]['EDIT_USER_ID'] = user_id_to_edit
             user_data[user_id]['is_editing'] = True
@@ -431,10 +421,7 @@ def button(update: Update, context: CallbackContext) -> None:
         user_id_to_edit = int(query.data[3:])
         if user_id_to_edit in user_data:
             post_id = user_data[user_id_to_edit].get('POST_ID')
-            if post_id in published_posts:
-                query.edit_message_text(text="This post has already been published.")
-                published_posts.discard(post_id)
-                return ConversationHandler.END
+            query.edit_message_text(post_id, 'This post has already been published')
             published_posts.add(post_id) 
             city_to_check = user_data[user_id_to_edit]['city']
             address = user_data[user_id_to_edit]['EXACT_ADDRESS']
@@ -591,8 +578,6 @@ def photo(update, context: CallbackContext) -> int:
     else:
         # If there's no photo, set a placeholder or skip the photo part
         photo_status = ""
-    post_id = str(uuid.uuid4())  # Generate a unique identifier
-    user_data[user_id]['POST_ID'] = post_id
     # Common details for both cases
     now = datetime.datetime.now()
     month_name = ukrainian_months[now.month]  # Ensure ukrainian_months dict is defined
@@ -627,10 +612,10 @@ def photo(update, context: CallbackContext) -> int:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
-        context.bot.send_message(chat_id=5873932146, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
+        sent_message = context.bot.send_message(chat_id=5873932146, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
+        user_data[user_id]['POST_ID'] = sent_message.message_id
     except Exception as e:
         print(e)
-    return ConversationHandler.END
 
 def broadcast_message(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('https://www.google.com/maps/')
