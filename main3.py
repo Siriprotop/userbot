@@ -62,7 +62,7 @@ def format_message(address, details, photo, date_time):
     return "\n".join(filter(None, message_parts))
 
 def format_without_photo(address, details, date_time):
-    message_parts = [address, details if details.strip() != '' else None, photo if photo.strip() != '' else None, date_time]
+    message_parts = [address, details if details.strip() != '' else None, date_time]
     return "\n".join(filter(None, message_parts))
 
 
