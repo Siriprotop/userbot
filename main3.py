@@ -197,6 +197,7 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     message = update.message
+    city_to_check = context.user_data
 
     # Проверка на наличие текста в сообщении
     if message.text:
@@ -217,21 +218,22 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
         document = None
 
     for city, channel_id in city_channels.items():
-        try:
-            if content and photo:
-                # Отправка текста и фото
-                context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
-            elif content:
-                # Отправка только текста
-                context.bot.send_message(chat_id=channel_id, text=content)
-            elif photo:
-                # Отправка только фото
-                context.bot.send_photo(chat_id=channel_id, photo=photo)
-            elif document:
-                # Отправка только документа
-                context.bot.send_document(chat_id=channel_id, document=document)
-        except telegram.error.BadRequest as e:
-            print(f"Failed to send message to channel {channel_id} for city {city}: {e}")
+        if city_to_check == city:
+            try:
+                if content and photo:
+                    # Отправка текста и фото
+                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+                elif content:
+                    # Отправка только текста
+                    context.bot.send_message(chat_id=channel_id, text=content)
+                elif photo:
+                    # Отправка только фото
+                    context.bot.send_photo(chat_id=channel_id, photo=photo)
+                elif document:
+                    # Отправка только документа
+                    context.bot.send_document(chat_id=channel_id, document=document)
+            except telegram.error.BadRequest as e:
+                print(f"Failed to send message to channel {channel_id} for city {city}: {e}")
 
     update.message.reply_text("Content sent to all city channels.")
     return ConversationHandler.END
