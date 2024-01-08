@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
 
 user_data = {}
-moderator_ids = [5873932146]
+moderator_ids = [6964683351]
 
 ukrainian_months = {
     1: "січня", 2: "лютого", 3: "березня", 4: "квітня",
@@ -155,10 +155,28 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
     # Словарь каналов и их тегов
     city_channels = {
         "Київ": '-1002009215054',
-        "Харків": '@wtu_kharkiv',
-        "Одеса": '@wtu_odesa',
-        "Львів": '@wtu_lviv',
-        "Дніпро": '@wtu_dnipro',
+        "Харків": '-1001990345559',
+        "Одеса": '-1002018743530',
+        "Львів": '-1002011256616',
+        "Дніпро": '-1002002447389',
+        "Херсон": '-1002074975452',
+        "Вінниця": '-1002039986567',
+        "Чернігів": '-1002036937534',
+        "Ужгород": '-1002004066415',
+        "Полтава": '-1002141539514',
+        "Хмельницький": '-1001777761375',
+        "Луцьк": '-1002009986196',
+        "Тернопіль": '-1002102395207',
+        "Кропивницький": '-1002131249827',
+        "Житомир": '-1002016456677',
+        "Суми": '-1002105965919',
+        "Черкаси": '-1002077464146',
+        "Чернівці": '-1002035929578',
+        "Рівне": '-1002101920363',
+        "Кривий Ріг": '-1002024876100',
+        "Івано-Франківськ": '-1002077710288',
+        "Миколаїв": '-1002005889645',
+        "Запоріжжя": '-1002062185937'
     }
 
     # Проходим по всем каналам и отправляем сообщение
@@ -396,7 +414,7 @@ def button(update: Update, context: CallbackContext) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             context.bot.send_message(
-                chat_id=5873932146,
+                chat_id=6964683351,
                 text=message_text,
                 reply_markup=reply_markup
             )
@@ -419,7 +437,7 @@ def button(update: Update, context: CallbackContext) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             context.bot.send_message(
-                chat_id=5873932146,
+                chat_id=6964683351,
                 text=message_text,
                 reply_markup=reply_markup
             )
@@ -791,7 +809,7 @@ def photo(update, context: CallbackContext) -> int:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
-        context.bot.send_message(chat_id=5873932146, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
+        context.bot.send_message(chat_id=6964683351, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
     except Exception as e:
         print(e)
     return ConversationHandler.END
