@@ -61,6 +61,10 @@ def format_message(address, details, photo, date_time):
     message_parts = [address, details if details.strip() != '' else None, photo if photo.strip() != '' else None, date_time]
     return "\n".join(filter(None, message_parts))
 
+def format_without_photo(address, details, date_time):
+    message_parts = [address, details if details.strip() != '' else None, photo if photo.strip() != '' else None, date_time]
+    return "\n".join(filter(None, message_parts))
+
 
 
 def save_user_data(user_id):
@@ -310,7 +314,7 @@ def button(update: Update, context: CallbackContext) -> None:
                     try:
                         context.bot.send_message(
                             chat_id=city_channel,
-                            text=format_message(address, details, date_time)
+                            text=format_without_photo(address, details, date_time)
                         )
                         query.edit_message_text(text="This post has already been published.")
                         return ConversationHandler.END
