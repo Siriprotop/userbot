@@ -223,6 +223,7 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
+def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     city_file = context.user_data.get('city_file')
     message = update.message
 
@@ -246,7 +247,7 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
         document = None
 
     try:
-        for filek, channel_id in users_data.items():
+        for filek, channel_id in file_to_channel_id.items():
             print(channel_id)
             print(filek)
             if content and photo:
