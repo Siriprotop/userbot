@@ -227,12 +227,14 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     city_file_name = context.user_data.get('city_file')  # Получаем имя файла
 
     # Находим соответствующее название города
+    print(city_file_name)
     city_name = None
     for file_name, city in file_to_channel_id.items():
         if file_name == city_file_name:
             city_name = city
+            print(city_name)
             break
-
+    print(city_name)
     if not city_name or city_name not in city_channels:
         update.message.reply_text("Город не выбран или отсутствует в списке.")
         return ConversationHandler.END
