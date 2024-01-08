@@ -235,29 +235,24 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
             print(city_name)
             break
     print(city_name)
-    if not city_name or city_name not in city_channels:
-        update.message.reply_text("Город не выбран или отсутствует в списке.")
-        return ConversationHandler.END
-
-    channel_id = city_channels[city_name]
 
     # Проверка на наличие текста, фото и документа (как в вашем предыдущем коде)
 
     try:
         if content and photo:
             # Отправка текста и фото
-            context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+            context.bot.send_photo(chat_id=city_name, photo=photo, caption=content)
         elif content:
             # Отправка только текста
-            context.bot.send_message(chat_id=channel_id, text=content)
+            context.bot.send_message(chat_id=city_name, text=content)
         elif photo:
             # Отправка только фото
-            context.bot.send_photo(chat_id=channel_id, photo=photo)
+            context.bot.send_photo(chat_id=city_name, photo=photo)
         elif document:
             # Отправка только документа
-            context.bot.send_document(chat_id=channel_id, document=document)
+            context.bot.send_document(chat_id=city_name, document=document)
     except telegram.error.BadRequest as e:
-        print(f"Failed to send message to channel {channel_id} for city {city_name}: {e}")
+        print(f"Failed to send message to channel {city_name} for city {city_name}: {e}")
 
     update.message.reply_text(f"Сообщение отправлено в канал города {city_name}.")
     return ConversationHandler.END
