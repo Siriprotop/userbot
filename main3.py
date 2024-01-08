@@ -234,17 +234,16 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
             city_name = city
             print(city_name)
             break
-    print(city_name)
 
     # Проверка на наличие текста, фото и документа (как в вашем предыдущем коде)
 
     try:
         if content and photo:
             # Отправка текста и фото
-            context.bot.send_photo(chat_id=city_name, photo=photo, caption=content)
+            context.bot.send_photo(chat_id=city_name, photo=photo, caption=message.text)
         elif content:
             # Отправка только текста
-            context.bot.send_message(chat_id=city_name, text=content)
+            context.bot.send_message(chat_id=city_name, text=message.text)
         elif photo:
             # Отправка только фото
             context.bot.send_photo(chat_id=city_name, photo=photo)
@@ -252,7 +251,7 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
             # Отправка только документа
             context.bot.send_document(chat_id=city_name, document=document)
     except telegram.error.BadRequest as e:
-        print(f"Failed to send message to channel {city_name} for city {city_name}: {e}")
+        print(f"Failed to send message to channel {channel_id} for city {city_name}: {e}")
 
     update.message.reply_text(f"Сообщение отправлено в канал города {city_name}.")
     return ConversationHandler.END
