@@ -39,7 +39,7 @@ city_channels = {
 EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
 
 user_data = {}
-moderator_ids = [5873932146]
+moderator_ids = [6964683351]
 
 ukrainian_months = {
     1: "січня", 2: "лютого", 3: "березня", 4: "квітня",
@@ -310,7 +310,7 @@ def button(update: Update, context: CallbackContext) -> None:
                     try:
                         context.bot.send_message(
                             chat_id=city_channel,
-                            text=format_message(address, details, photo, date_time)
+                            text=format_message(address, details, date_time)
                         )
                         query.edit_message_text(text="This post has already been published.")
                         return ConversationHandler.END
@@ -345,7 +345,7 @@ def button(update: Update, context: CallbackContext) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             context.bot.send_message(
-                chat_id=5873932146,
+                chat_id=6964683351,
                 text=message_text,
                 reply_markup=reply_markup
             )
@@ -368,7 +368,7 @@ def button(update: Update, context: CallbackContext) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             context.bot.send_message(
-                chat_id=5873932146,
+                chat_id=6964683351,
                 text=message_text,
                 reply_markup=reply_markup
             )
@@ -623,7 +623,7 @@ def photo(update, context: CallbackContext) -> int:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
-        context.bot.send_message(chat_id=5873932146, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
+        context.bot.send_message(chat_id=6964683351, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
     except Exception as e:
         print(e)
     return ConversationHandler.END
