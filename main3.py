@@ -197,46 +197,35 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     message = update.message
-    city_to_check = context.user_data
+    city_name = context.user_data.get('city_file')  # Получаем название города
 
-    # Проверка на наличие текста в сообщении
-    if message.text:
-        content = message.text
-    else:
-        content = None
+    if not city_name or city_name not in city_channels:
+        update.message.reply_text("Город не выбран или отсутствует в списке.")
+        return ConversationHandler.END
 
-    # Проверка на наличие фото
-    if message.photo:
-        photo = message.photo[-1].file_id  # Берем последнее фото (самое большое)
-    else:
-        photo = None
+    channel_id = city_channels[city_name]
 
-    # Проверка на наличие документа
-    if message.document:
-        document = message.document.file_id
-    else:
-        document = None
+    # Проверка на наличие текста, фото и документа (как в вашем предыдущем коде)
 
-    for city, channel_id in city_channels.items():
-        if city_to_check == city:
-            try:
-                if content and photo:
-                    # Отправка текста и фото
-                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
-                elif content:
-                    # Отправка только текста
-                    context.bot.send_message(chat_id=channel_id, text=content)
-                elif photo:
-                    # Отправка только фото
-                    context.bot.send_photo(chat_id=channel_id, photo=photo)
-                elif document:
-                    # Отправка только документа
-                    context.bot.send_document(chat_id=channel_id, document=document)
-            except telegram.error.BadRequest as e:
-                print(f"Failed to send message to channel {channel_id} for city {city}: {e}")
+    try:
+        if content and photo:
+            # Отправка текста и фото
+            context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+        elif content:
+            # Отправка только текста
+            context.bot.send_message(chat_id=channel_id, text=content)
+        elif photo:
+            # Отправка только фото
+            context.bot.send_photo(chat_id=channel_id, photo=photo)
+        elif document:
+            # Отправка только документа
+            context.bot.send_document(chat_id=channel_id, document=document)
+    except telegram.error.BadRequest as e:
+        print(f"Failed to send message to channel {channel_id} for city {city_name}: {e}")
 
-    update.message.reply_text("Content sent to all city channels.")
+    update.message.reply_text(f"Сообщение отправлено в канал города {city_name}.")
     return ConversationHandler.END
+
 
 
 
