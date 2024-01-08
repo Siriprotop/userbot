@@ -774,15 +774,23 @@ def photo(update, context: CallbackContext) -> int:
 
     # Prepare the message text with or without the photo URL
     try:
-        message_text = (
-            "Опублікувати наступну адресу?\n"
-            f"{user_data[user_id].get('EXACT_ADDRESS')}\n"
-            f"{user_data[user_id].get('DETAILS', '').strip() or None}\n"
-            f"{user_data[user_id].get('city')}\n"
-            f"{photo_status}\n"
-            f"{user_data[user_id]['DATE_TIME']}\n"
-            f"{user_id}\n"
-        )
+        # Сначала соберите все части сообщения, проверяя наличие содержимого.
+        address = user_data[user_id].get('EXACT_ADDRESS', '').strip()
+        details = user_data[user_id].get('DETAILS', '').strip()
+        city = user_data[user_id].get('city', '').strip()
+        photo_status = user_data[user_id].get('PHOTO', '').strip()
+        date_time = user_data[user_id].get('DATE_TIME', '').strip()
+        user_id_str = str(user_id).strip()
+
+        # Соберите список непустых строк.
+        message_parts = [address, details if details else "", city, photo_status, date_time, user_id_str]
+
+        # Объедините непустые строки, вставляя перенос строки между ними.
+        message_text = "\n".join(part for part in message_parts if part)
+
+        # Добавьте заголовок сообщения.
+        message_text = "Опублікувати наступну адресу?\n" + message_text
+
 
         keyboard = [
             [InlineKeyboardButton("N", callback_data=f"no_{user_id}"),
