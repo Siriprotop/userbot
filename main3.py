@@ -5,6 +5,11 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, Callback
 import requests
 import uuid
 import telegram
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
 
@@ -19,6 +24,11 @@ ukrainian_months = {
 
 
 CHOOSE_city, BROADCAST_MSG, BROADCAST_ALL = range(5, 8)
+
+
+def error_handler(update, context):
+    """Логируем ошибки, вызванные обновлениями."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 # Initialize this somewhere accessible in your code
 published_posts = set()
@@ -602,6 +612,8 @@ def new_address(update: Update, context: CallbackContext) -> int:
 def exact_address(update: Update, context: CallbackContext) -> int:
     text = update.message.text
     user_id = update.message.chat_id
+    if user_id not in user_data:
+        user_data[user_id] = {}
     keyboard = [
         [InlineKeyboardButton("Пропустити", callback_data='skip_details')]
     ]
@@ -623,6 +635,8 @@ def exact_address(update: Update, context: CallbackContext) -> int:
 def details(update: Update, context: CallbackContext) -> int:
     text = update.message.text
     user_id = update.message.chat_id
+    if user_id not in user_data:
+        user_data[user_id] = {}
     keyboard = [
         [InlineKeyboardButton("Пропустити", callback_data='skip_photo')]
     ]
@@ -747,7 +761,8 @@ def updaterPhoto(update: Update, context: CallbackContext) -> int:
 
 def photo(update, context: CallbackContext) -> int:
     user_id = update.message.chat_id
-
+    if user_id not in user_data:
+        user_data[user_id] = {}
     # Check if the update message actually has a photo
     if update.message.photo:
         photo_file = update.message.photo[-1].get_file()
@@ -890,6 +905,7 @@ def main() -> None:
     dispatcher.add_handler(conv_handler2)
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(CallbackQueryHandler(button))
+    dispatcher.add_error_handler(error_handler)
 
 
     updater.start_polling()
