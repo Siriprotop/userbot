@@ -316,7 +316,6 @@ def button(update: Update, context: CallbackContext) -> None:
                             chat_id=city_channel,
                             text=format_without_photo(address, details, date_time)
                         )
-                        query.edit_message_text(post_id, "This post has already been published.")
                         return ConversationHandler.END
                     except Exception as e:
                         print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
@@ -391,6 +390,7 @@ def button(update: Update, context: CallbackContext) -> None:
     if query.data.startswith('no_'):
         user_id_to_delete = int(query.data[3:])
         post_id = user_data[user_id_to_delete].get('POST_ID')
+        query.edit_message_text(text="This post has already been published")
 
         # If the post is not published, then handle the rejection normally
         user_data.pop(user_id_to_delete, None)
@@ -408,7 +408,7 @@ def button(update: Update, context: CallbackContext) -> None:
 
         if user_id_to_edit in user_data:
             post_id = user_data[user_id_to_edit].get('POST_ID')
-            query.edit_message_text(post_id, text="This post has already been published.")
+            query.edit_message_text(text="This post has already been published.")
             context.user_data['EDIT_USER_ID'] = user_id_to_edit
             user_data[user_id]['EDIT_USER_ID'] = user_id_to_edit
             user_data[user_id]['is_editing'] = True
@@ -436,7 +436,6 @@ def button(update: Update, context: CallbackContext) -> None:
                         chat_id=city_channel,
                         text=format_message(address, details, photo, date_time)
                     )
-                    query.edit_message_text(text="This post has already been published.")
                 except Exception as e:
                     print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
             else:
