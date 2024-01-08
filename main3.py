@@ -512,6 +512,7 @@ def button(update: Update, context: CallbackContext) -> None:
                             chat_id=uid,
                             text=format_message(address, details, photo, date_time)
                         )
+                        query.edit_message_text(text="This post has already been published.")
                         city_files = {
                             "Київ": "Kyiv.json",
                             "Харків": "Kharkiv.json",
@@ -563,7 +564,7 @@ def button(update: Update, context: CallbackContext) -> None:
                                     file.seek(0)
                                     json.dump(data, file, ensure_ascii=False)
                                     file.truncate()
-                                    query.edit_message_text(text="This post has already been published.")
+                            
                             except FileNotFoundError:
                                 # Handle the case where the city file does not exist
                                 with open(file_name, 'w', encoding='utf-8') as file:
@@ -676,6 +677,7 @@ def updaterPhoto(update: Update, context: CallbackContext) -> int:
                             chat_id=uid,
                             text=f"{address}\n{details}\n{photo}\n{date_time}"
                         )
+                        query.edit_message_text(text="This post has already been published.")
                         city_files = {
                             "Київ": "Kyiv.json",
                             "Харків": "Kharkiv.json",
@@ -727,7 +729,7 @@ def updaterPhoto(update: Update, context: CallbackContext) -> int:
                                     file.seek(0)
                                     json.dump(data, file, ensure_ascii=False)
                                     file.truncate()
-                                    query.edit_message_text(text="This post has already been published.")
+                                
 
                             except FileNotFoundError:
                                 # Handle the case where the city file does not exist
