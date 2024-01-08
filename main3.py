@@ -229,7 +229,10 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     if not city_file:
         update.message.reply_text("No city file found.")
         return ConversationHandler.END
-
+    if message.caption:
+        caption = message.caption
+    else:
+        caption = None
     if message.text:
         content = message.text
     else:
@@ -248,10 +251,12 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     try:
         for filek, channel_id in file_to_channel_id.items():
             if filek == city_file:
-                if content:
+                if photo and caption:
+                    context.bot.send_photo(chat_od=channel_id, photo=photo, caption=caption)
+                elif content:
                     context.bot.send_message(chat_id=channel_id, text=content)
                 elif photo:
-                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+                    context.bot.send_photo(chat_id=channel_id, photo=photo)
                 elif document:
                     context.bot.send_document(chat_id=channel_id, document=document)
 
