@@ -808,11 +808,14 @@ def broadcast_message(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('https://www.google.com/maps/')
     return ConversationHandler.END
 def skip_photo(update: Update, context: CallbackContext) -> int:
+
     print(123)
     print(context.user_data)
     if 'EDIT_USER_ID' in context.user_data:
+    
         print('SKIP PHOTO DPLASJDAIOHAS9YW98FWYRQ98WFHESU89FHSA9FHD')
         user_id_to_edit = context.user_data['EDIT_USER_ID'] 
+        user_data[user_id_to_edit].pop('PHOTO', None)
     update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
     user_id = update.message.chat_id  # Capture user_id
     save_user_data(user_id)  # Pass user_id to function
