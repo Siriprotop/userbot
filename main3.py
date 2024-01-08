@@ -238,10 +238,10 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     # Проверка на наличие текста, фото и документа (как в вашем предыдущем коде)
 
     try:
-        if content and photo:
+        if message.text and photo:
             # Отправка текста и фото
             context.bot.send_photo(chat_id=city_name, photo=photo, caption=message.text)
-        elif content:
+        elif message.text:
             # Отправка только текста
             context.bot.send_message(chat_id=city_name, text=message.text)
         elif photo:
