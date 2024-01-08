@@ -248,12 +248,10 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     try:
         for filek, channel_id in file_to_channel_id.items():
             if filek == city_file:
-                if content and photo:
-                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
-                elif content:
+                if content:
                     context.bot.send_message(chat_id=channel_id, text=content)
                 elif photo:
-                    context.bot.send_photo(chat_id=channel_id, photo=photo)
+                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
                 elif document:
                     context.bot.send_document(chat_id=channel_id, document=document)
 
