@@ -9,7 +9,7 @@ import telegram
 EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
 
 user_data = {}
-moderator_ids = [6964683351]
+moderator_ids = [5873932146]
 
 ukrainian_months = {
     1: "січня", 2: "лютого", 3: "березня", 4: "квітня",
@@ -22,6 +22,9 @@ CHOOSE_city, BROADCAST_MSG, BROADCAST_ALL = range(5, 8)
 
 # Initialize this somewhere accessible in your code
 published_posts = set()
+def format_message(address, details, photo, date_time):
+    message_parts = [address, details if details.strip() != '' else None, photo if photo.strip() != '' else None, date_time]
+    return "\n".join(filter(None, message_parts))
 
 
 
@@ -339,7 +342,7 @@ def button(update: Update, context: CallbackContext) -> None:
                                     try:
                                         context.bot.send_message(
                                         chat_id=user,
-                                        text=f"{address}\n{details}\n{photo}\n{date_time}"
+                                        text=format_message(address, details, photo, date_time)
                                         )
                                     except telegram.error.BadRequest as e:
                                         print(e)
@@ -408,7 +411,7 @@ def button(update: Update, context: CallbackContext) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             context.bot.send_message(
-                chat_id=6964683351,
+                chat_id=5873932146,
                 text=message_text,
                 reply_markup=reply_markup
             )
@@ -430,7 +433,7 @@ def button(update: Update, context: CallbackContext) -> None:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             context.bot.send_message(
-                chat_id=6964683351,
+                chat_id=5873932146,
                 text=message_text,
                 reply_markup=reply_markup
             )
@@ -505,7 +508,7 @@ def button(update: Update, context: CallbackContext) -> None:
                     try:
                         context.bot.send_message(
                             chat_id=uid,
-                            text=f"{address}\n{details}\n{photo}\n{date_time}"
+                            text=format_message(address, details, photo, date_time)
                         )
                         city_files = {
                             "Київ": "Kyiv.json",
@@ -773,6 +776,7 @@ def photo(update, context: CallbackContext) -> int:
             "Опублікувати наступну адресу?\n"
             f"{user_data[user_id].get('EXACT_ADDRESS')}\n"
             f"{user_data[user_id].get('DETAILS')}\n"
+            f"{user_data[user_id].get('city')}\n"
             f"{photo_status}\n"
             f"{formatted_date}\n"
         )
@@ -784,7 +788,7 @@ def photo(update, context: CallbackContext) -> int:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
-        context.bot.send_message(chat_id=6964683351, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
+        context.bot.send_message(chat_id=5873932146, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
     except Exception as e:
         print(e)
     return ConversationHandler.END
