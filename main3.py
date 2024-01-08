@@ -152,51 +152,25 @@ def broadcast_moderator(update: Update, context: CallbackContext) -> int:
 def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
     message = update.message.text
 
-    city_files = [
-        "Kyiv.json",
-        "Kharkiv.json",
-        "Odesa.json",
-        "Lviv.json",
-        "Dnipro.json",
-        "Zaporizhzhia.json",
-        "Mykolaiv.json",
-        "Ivano-Frankivsk.json",
-        "Kryvyi Rih.json",
-        "Rivne.json",
-        "Chernivtsi.json",
-        "Cherkasy.json",
-        "Sumy.json",
-        "Zhytomyr.json",
-        "Kropyvnytskyi.json",
-        "Ternopil.json",
-        "Lutsk.json",
-        "Khmelnytskyi.json",
-        "Poltava.json",
-        "Uzhhorod.json",
-        "Chernihiv.json",
-        "Vinnytsia.json",
-        "Kherson.json"
-    ]
+    # Словарь каналов и их тегов
+    city_channels = {
+        "Київ": '@wtu_kyiv',
+        "Харків": '@wtu_kharkiv',
+        "Одеса": '@wtu_odesa',
+        "Львів": '@wtu_lviv',
+        "Дніпро": '@wtu_dnipro',
+    }
 
-    all_user_ids = set()
-    for city_file in city_files:
+    # Проходим по всем каналам и отправляем сообщение
+    for city, channel_username in city_channels.items():
         try:
-            with open(city_file, 'r', encoding='utf-8') as file:
-                try:
-                    users_data = json.load(file)
-                except json.JSONDecodeError:
-                    print(f"File {city_file} is empty or corrupt. Skipping.")
-                    continue  # Skip this file
+            context.bot.send_message(chat_id=channel_username, text=message)
+        except telegram.error.BadRequest as e:
+            print(f"Failed to send message to {channel_username}: {e}")
 
-                all_user_ids.update(users_data.keys())
-        except FileNotFoundError:
-            print(f"File {city_file} not found, skipping...")
-
-
-    broadcast(update, context, all_user_ids)  # Call broadcast
-
-    update.message.reply_text("Content sent to all users in all cities.")
+    update.message.reply_text("Content sent to all city channels.")
     return ConversationHandler.END
+
 
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
