@@ -154,7 +154,7 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
     # Словарь каналов и их тегов
     city_channels = {
-        "Київ": '@wtu_kyiv',
+        "Київ": '-1002009215054',
         "Харків": '@wtu_kharkiv',
         "Одеса": '@wtu_odesa',
         "Львів": '@wtu_lviv',
