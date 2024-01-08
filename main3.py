@@ -223,6 +223,7 @@ def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
 
 
 def broadcast_to_city(update: Update, context: CallbackContext) -> int:
+def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     city_file = context.user_data.get('city_file')
     message = update.message
 
@@ -246,10 +247,9 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
         document = None
 
     try:
-        with open(city_file, 'r', encoding='utf-8') as file:
-            users_data = json.load(file)
-
-        for file, channel_id in users_data.items():
+        for filek, channel_id in users_data.items():
+            print(channel_id)
+            print(filek)
             if content and photo:
                 context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
             elif content:
@@ -264,6 +264,7 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(f"Failed to send messages: {e}")
     
     return ConversationHandler.END
+
 
 
 
