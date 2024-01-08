@@ -427,7 +427,6 @@ def button(update: Update, context: CallbackContext) -> None:
                 f"{user_data[user_id]['EXACT_ADDRESS']}\n"
                 f"{user_data[user_id]['DATE_TIME']}\n"
                 f"{user_data[user_id].get('user_id')}\n"
-                f"{photo_status}\n"
                 f"{formatted_date}\n"
                 f"{user_id}\n"
             )
