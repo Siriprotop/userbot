@@ -247,16 +247,15 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
 
     try:
         for filek, channel_id in file_to_channel_id.items():
-            print(channel_id)
-            print(filek)
-            if content and photo:
-                context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
-            elif content:
-                context.bot.send_message(chat_id=channel_id, text=content)
-            elif photo:
-                context.bot.send_photo(chat_id=channel_id, photo=photo)
-            elif document:
-                context.bot.send_document(chat_id=channel_id, document=document)
+            if filek == city_File:
+                if content and photo:
+                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=content)
+                elif content:
+                    context.bot.send_message(chat_id=channel_id, text=content)
+                elif photo:
+                    context.bot.send_photo(chat_id=channel_id, photo=photo)
+                elif document:
+                    context.bot.send_document(chat_id=channel_id, document=document)
 
         update.message.reply_text(f"Content sent to users in {city_file}.")
     except Exception as e:
