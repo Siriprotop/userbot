@@ -228,7 +228,7 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
 
     # Находим соответствующее название города
     city_name = None
-    for city, file_name in city_files.items():
+    for file_name, city in file_to_channel_id.items():
         if file_name == city_file_name:
             city_name = city
             break
