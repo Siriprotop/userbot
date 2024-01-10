@@ -6,10 +6,46 @@ import requests
 import uuid
 import telegram
 import logging
+import threading
+import sqlite3
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger()
+
+class UserData:
+    def __init__(self, db_file):
+        self.conn = sqlite3.connect(db_file)
+        self.create_table()
+
+    def create_table(self):
+        try:
+            self.conn.execute('''CREATE TABLE IF NOT EXISTS user_data
+                                (user_id INTEGER PRIMARY KEY,
+                                 data TEXT)''')
+            self.conn.commit()
+        except Exception as e:
+            print(f"Error creating table: {e}")
+
+    def add_or_update_user(self, user_id, data):
+        try:
+            self.conn.execute("INSERT OR REPLACE INTO user_data (user_id, data) VALUES (?, ?)",
+                              (user_id, data))
+            self.conn.commit()
+        except Exception as e:
+            print(f"Error updating user data: {e}")
+
+    def get_user_data(self, user_id):
+        try:
+            cursor = self.conn.execute("SELECT data FROM user_data WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            return row[0] if row else None
+        except Exception as e:
+            print(f"Error fetching user data: {e}")
+            return None
+
+    def close(self):
+        self.conn.close()
 
 city_channels = {
     "Київ": '-1002009215054',
@@ -37,6 +73,33 @@ city_channels = {
     "Запоріжжя": '-1002062185937'
 }
 
+
+
+city_files = {
+    "Київ": "Kyiv.json",
+    "Харків": "Kharkiv.json",
+    "Одеса": "Odesa.json",
+    "Львів": "Lviv.json",
+    "Дніпро": "Dnipro.json",
+    "Запоріжжя": "Zaporizhzhia.json",
+    "Миколаїв": "Mykolaiv.json",
+    "Івано-Франківськ": "Ivano-Frankivsk.json",
+    "Кривий Ріг": "Kryvyi Rih.json",
+    "Рівне": "Rivne.json",
+    "Чернівці": "Chernivtsi.json",
+    "Черкаси": "Cherkasy.json",
+    "Суми": "Sumy.json",
+    "Житомир": "Zhytomyr.json",
+    "Кропивницький": "Kropyvnytskyi.json",
+    "Тернопіль": "Ternopil.json",
+    "Луцьк": "Lutsk.json",
+    "Хмельницький": "Khmelnytskyi.json",
+    "Полтава": "Poltava.json",
+    "Ужгород": "Uzhhorod.json",
+    "Чернігів": "Chernihiv.json",
+    "Вінниця": "Vinnytsia.json",
+    "Херсон": "Kherson.json",
+}
 file_to_channel_id = {
     "Kyiv.json": '-1002009215054',
     "Kharkiv.json": '-1001990345559',
@@ -63,7 +126,7 @@ file_to_channel_id = {
     "Kherson.json": '-1002074975452'
 }
 
-EXACT_ADDRESS, DETAILS, PHOTO, EDIT_ADDRESS = range(4)
+EXACT_ADDRESS, DETAILS, PHOTO, YR_MODERATION = range(4)
 
 user_data = {}
 moderator_ids = [6964683351]
@@ -82,8 +145,6 @@ def error_handler(update, context):
     """Логируем ошибки, вызванные обновлениями."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
-# Initialize this somewhere accessible in your code
-published_posts = set()
 def format_message(address, details, photo, date_time):
     message_parts = [address, details if details.strip() != '' else None, photo if photo.strip() != '' else None, date_time]
     return "\n".join(filter(None, message_parts))
@@ -155,6 +216,7 @@ def broadcast(update: Update, context: CallbackContext, user_ids) -> None:
     message = update.message
     if message.text:
         for user_id in user_ids:
+            print(user_id)
             try:
                 # Attempt to send the message
                 context.bot.send_message(chat_id=user_id, text=message.text)
@@ -206,18 +268,39 @@ def broadcast_moderator(update: Update, context: CallbackContext) -> int:
         return ConversationHandler.END
 
 def broadcast_to_all_cities(update: Update, context: CallbackContext) -> int:
-    message = update.message.text
+    message = update.message
+    caption = message.caption if message.caption else None
+    content = message.text if message.text else None
+    photo = message.photo[-1].file_id if message.photo else None
+    document = message.document.file_id if message.document else None
 
-    # Словарь каналов и их тегов
+    try:
+        # Отправка сообщений во все каналы
+        for city, channel_id in city_channels.items():
+            try:
+                if photo and caption:
+                    context.bot.send_photo(chat_id=channel_id, photo=photo, caption=caption)
+                elif content:
+                    context.bot.send_message(chat_id=channel_id, text=content)
+                elif photo:
+                    context.bot.send_photo(chat_id=channel_id, photo=photo)
+                elif document:
+                    context.bot.send_document(chat_id=channel_id, document=document)
+            except telegram.error.BadRequest as e:
+                print(f"Failed to send message to channel {channel_id}: {e}")
 
-    # Проходим по всем каналам и отправляем сообщение
-    for city, channel_username in city_channels.items():
-        try:
-            context.bot.send_message(chat_id=channel_username, text=message)
-        except telegram.error.BadRequest as e:
-            print(f"Failed to send message to {channel_username}: {e}")
+        # Отправка сообщений всем пользователям в каждом городе
+        for city_file in city_files.values():
+            with open(city_file, 'r', encoding='utf-8') as file:
+                users_data = json.load(file)
+                all_user_ids = set(users_data.keys())
+                broadcast(update, context, all_user_ids)
 
-    update.message.reply_text("Content sent to all city channels.")
+        update.message.reply_text("Content sent to all city channels and users.")
+    except Exception as e:
+        update.message.reply_text(f"Failed to send messages: {e}")
+        print(f"Exception: {e}")
+
     return ConversationHandler.END
 
 
@@ -229,26 +312,18 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
     if not city_file:
         update.message.reply_text("No city file found.")
         return ConversationHandler.END
-    if message.caption:
-        caption = message.caption
-    else:
-        caption = None
-    if message.text:
-        content = message.text
-    else:
-        content = None
 
-    if message.photo:
-        photo = message.photo[-1].file_id
-    else:
-        photo = None
-
-    if message.document:
-        document = message.document.file_id
-    else:
-        document = None
+    caption = message.caption if message.caption else None
+    content = message.text if message.text else None
+    photo = message.photo[-1].file_id if message.photo else None
+    document = message.document.file_id if message.document else None
 
     try:
+        with open(city_file, 'r', encoding='utf-8') as file:
+            users_data = json.load(file)
+        all_user_ids = set(user_data.keys())
+        broadcast(update, context, all_user_ids)
+
         for filek, channel_id in file_to_channel_id.items():
             if filek == city_file:
                 if photo and caption:
@@ -269,6 +344,7 @@ def broadcast_to_city(update: Update, context: CallbackContext) -> int:
 
 
 
+
 def choose_city(update: Update, context: CallbackContext) -> int:
     query = update.callback_query
     query.answer()
@@ -276,32 +352,6 @@ def choose_city(update: Update, context: CallbackContext) -> int:
     chosen_city = query.data
     if user_id not in user_data:
         user_data[user_id] = {}  # Initialize an empty dict for the user
-
-    city_files = {
-        "Київ": "Kyiv.json",
-        "Харків": "Kharkiv.json",
-        "Одеса": "Odesa.json",
-        "Львів": "Lviv.json",
-        "Дніпро": "Dnipro.json",
-        "Запоріжжя": "Zaporizhzhia.json",
-        "Миколаїв": "Mykolaiv.json",
-        "Івано-Франківськ": "Ivano-Frankivsk.json",
-        "Кривий Ріг": "Kryvyi Rih.json",
-        "Рівне": "Rivne.json",
-        "Чернівці": "Chernivtsi.json",
-        "Черкаси": "Cherkasy.json",
-        "Суми": "Sumy.json",
-        "Житомир": "Zhytomyr.json",
-        "Кропивницький": "Kropyvnytskyi.json",
-        "Тернопіль": "Ternopil.json",
-        "Луцьк": "Lutsk.json",
-        "Хмельницький": "Khmelnytskyi.json",
-        "Полтава": "Poltava.json",
-        "Ужгород": "Uzhhorod.json",
-        "Чернігів": "Chernihiv.json",
-        "Вінниця": "Vinnytsia.json",
-        "Херсон": "Kherson.json",
-    }
 
     if chosen_city == 'broadcast_all':
         query.edit_message_text(text="Введите сообщение для рассылки:")
@@ -328,6 +378,18 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def city(update: Update, context: CallbackContext) -> None:
     user_id = update.message.chat_id
+    for city, file_name in city_files.items():
+        try:
+            with open(file_name, 'r+', encoding='utf-8') as file:
+                data = json.load(file)
+                if str(user_id) in data:
+                    del data[str(user_id)]
+                    file.seek(0)
+                    json.dump(data, file, ensure_ascii=False)
+                    file.truncate()
+        except json.decoder.JSONDecodeError:
+            continue  # Если файл пустой или ошибка чтения, пропускаем его
+
     cities = [
         "Київ", "Харків", "Одеса", "Львів", "Дніпро", "Запоріжжя", "Миколаїв",
         "Івано-Франківськ", "Кривий Ріг", "Рівне", "Чернівці", "Черкаси", "Суми",
@@ -343,6 +405,24 @@ def city(update: Update, context: CallbackContext) -> None:
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Вибери місто:', reply_markup=reply_markup)
 
+
+def yr_moderation(update: Update, context: CallbackContext) -> int:
+    query = update.callback_query
+    query.answer()
+    user_id_to_edit = int(query.data.split('_')[1])  # Извлечение user_id из callback_data
+
+    context.user_data['EDIT_USER_ID'] = user_id_to_edit  # Сохранение user_id для дальнейшего использования
+    print(user_id_to_edit)
+    # Переход к шагу ввода точного адреса
+    update.effective_message.reply_text(
+        "<b>1) Введите точный адрес (обязательно)</b>\n"
+        "Чем точнее будет адрес, тем лучше.\n"
+        "Например: Богдана Хмельницкого, 33.",
+        parse_mode='HTML'
+    )
+    return EXACT_ADDRESS  # Переход к следующему состоянию диалога
+
+
 def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
@@ -355,13 +435,11 @@ def button(update: Update, context: CallbackContext) -> None:
             user_id_to_edit = context.user_data['EDIT_USER_ID']
             if user_id_to_edit in user_data:
                 post_id = user_data[user_id_to_edit].get('POST_ID')
-                published_posts.add(post_id) 
                 city_to_check = user_data[user_id_to_edit]['city']
                 address = user_data[user_id_to_edit]['EXACT_ADDRESS']
                 details = user_data[user_id_to_edit].get('DETAILS', '')
                 user_data[user_id_to_edit].pop('PHOTO', None)
                 date_time = user_data[user_id_to_edit].get('DATE_TIME', '')
-
                 city_channel = city_channels.get(city_to_check)
                 if city_channel:
                     try:
@@ -369,13 +447,28 @@ def button(update: Update, context: CallbackContext) -> None:
                             chat_id=city_channel,
                             text=format_without_photo(address, details, date_time)
                         )
-                        return ConversationHandler.END
                     except Exception as e:
                         print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
-                        return ConversationHandler.END
                 else:
                     query.answer(text="Канал для данного города не найден.")
-                    return ConversationHandler.END
+                city_file = city_files.get(city_to_check)
+                if city_file:
+                    try:
+                        with open(city_file, 'r', encoding='utf-8') as file:
+                            users_data = json.load(file)
+                        all_user_ids = set(users_data.keys())
+                        for user_id in all_user_ids:
+    
+                                try:
+                                    context.bot.send_message(chat_id=user_id, text=format_without_photo(address, details, date_time))
+                                except telegram.error.BadRequest as e:
+                                    print(f"Failed to send message to user {user_id}: {e}")
+                    except Exception as e:
+                        print(f"Ошибка при отправке сообщений пользователям в городе {city_to_check}: {e}")
+                else:
+                    print(f"Файл данных для города {city_to_check} не найден.")
+                context.user_data.clear()  # Используйте clear() для очистки данных
+                return ConversationHandler.END
         print('GGG')
         query.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
         now = datetime.datetime.now()
@@ -456,26 +549,14 @@ def button(update: Update, context: CallbackContext) -> None:
             print(e)
             return ConversationHandler.END
 
-    elif query.data.startswith('yr'):
-        user_id_to_edit = int(query.data[3:])
-
-        if user_id_to_edit in user_data:
-            post_id = user_data[user_id_to_edit].get('POST_ID')
-            query.edit_message_text(text="This post has already been published.")
-            context.user_data['EDIT_USER_ID'] = user_id_to_edit
-            user_data[user_id]['EDIT_USER_ID'] = user_id_to_edit
-            user_data[user_id]['is_editing'] = True
-            update.effective_message.reply_text("<b>1) Введите точный адрес (обязательно)</b>\nЧем точнее будет адрес, тем лучше.\nНапр: Богдана Хмельницкого, 33.", parse_mode='HTML')
-            return EXACT_ADDRESS
-        else:
-            query.answer(text="Данные пользователя не найдены.")
-            return
+    elif query.data.startswith('yr_'):
+        query.edit_message_text(text="This post has already published")
+        return yr_moderation(update, context)
     elif query.data.startswith('yp'):
         user_id_to_edit = int(query.data[3:])
         if user_id_to_edit in user_data:
             post_id = user_data[user_id_to_edit].get('POST_ID')
-            query.edit_message_text(post_id, 'This post has already been published')
-            published_posts.add(post_id) 
+            query.edit_message_text('This post has already been published')
             city_to_check = user_data[user_id_to_edit]['city']
             address = user_data[user_id_to_edit]['EXACT_ADDRESS']
             details = user_data[user_id_to_edit].get('DETAILS', '')
@@ -493,6 +574,22 @@ def button(update: Update, context: CallbackContext) -> None:
                     print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
             else:
                 query.answer(text="Канал для данного города не найден.")
+            city_file = city_files.get(city_to_check)
+            if city_file:
+                try:
+                    with open(city_file, 'r', encoding='utf-8') as file:
+                        users_data = json.load(file)
+                    all_user_ids = set(users_data.keys())
+                    print(all_user_ids)
+                    for user_id in all_user_ids:
+                            try:
+                                context.bot.send_message(chat_id=user_id, text=format_message(address, details, photo, date_time))
+                            except telegram.error.BadRequest as e:
+                                print(f"Failed to send message to user {user_id}: {e}")
+                except Exception as e:
+                    print(f"Ошибка при отправке сообщений пользователям в городе {city_to_check}: {e}")
+            else:
+                print(f"Файл данных для города {city_to_check} не найден.")
 
             
     else:
@@ -518,16 +615,21 @@ def new_address(update: Update, context: CallbackContext) -> int:
     return EXACT_ADDRESS
 
 def exact_address(update: Update, context: CallbackContext) -> int:
+    print("EXACT ADDRESS")
     text = update.message.text
     user_id = update.message.chat_id
     if user_id not in user_data:
         user_data[user_id] = {}
+        print('user_id in exact address not in user_data')
     keyboard = [
         [InlineKeyboardButton("Пропустити", callback_data='skip_details')]
     ]
+    print('reply_markup')
     reply_markup = InlineKeyboardMarkup(keyboard)
     if 'EDIT_USER_ID' in context.user_data:
+        print('edit user id in exact adddress')
         user_id_to_edit = context.user_data['EDIT_USER_ID']
+        print(user_id_to_edit)
         print(f'USER ID TO EDIT IN EXACT {user_id_to_edit}')
         user_data[user_id_to_edit]['EXACT_ADDRESS'] = text
         save_user_data(user_id_to_edit)
@@ -584,8 +686,6 @@ def updaterPhoto(update: Update, context: CallbackContext) -> int:
     if True:
         if user_id_to_edit in user_data:
             post_id = user_data[user_id_to_edit].get('POST_ID')
-            published_posts.add(post_id) 
-            print(published_posts)
             city_to_check = user_data[user_id_to_edit]['city']
             address = user_data[user_id_to_edit]['EXACT_ADDRESS']
             details = user_data[user_id_to_edit].get('DETAILS', '')
@@ -600,14 +700,28 @@ def updaterPhoto(update: Update, context: CallbackContext) -> int:
                         chat_id=city_channel,
                         text=format_message(address, details, photo, date_time)
                     )
-                    query.edit_message_text(text="This post has already been published.")
                 except Exception as e:
                     print(f"Не удалось отправить сообщение в канал {city_channel}: {e}")
             else:
                 query.answer(text="Канал для данного города не найден.")
+            city_file = city_files.get(city_to_check)
+            if city_file:
+                try:
+                    with open(city_file, 'r', encoding='utf-8') as file:
+                        users_data = json.load(file)
+                    for user_id in users_data:
+                        if str(user_id).isdigit():
+                            try:
+                                context.bot.send_message(chat_id=user_id, text=format_message(address, details, photo, date_time))
+                                update.message.reply_text(text="Success!")
+                            except telegram.error.BadRequest as e:
+                                print(f"Failed to send message to user {user_id}: {e}")
+                except Exception as e:
+                    print(f"Ошибка при отправке сообщений пользователям в городе {city_to_check}: {e}")
+            else:
+                print(f"Файл данных для города {city_to_check} не найден.")
+    context.user_data.clear()
     return ConversationHandler.END
-
-
 def photo(update, context: CallbackContext) -> int:
     user_id = update.message.chat_id
     if user_id not in user_data:
@@ -666,6 +780,7 @@ def photo(update, context: CallbackContext) -> int:
         update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
         sent_message = context.bot.send_message(chat_id=6964683351, text=message_text, reply_markup=reply_markup)  # Change chat_id as needed
         user_data[user_id]['POST_ID'] = sent_message.message_id
+        return ConversationHandler.END
     except Exception as e:
         print(e)
 
@@ -677,29 +792,16 @@ def skip_photo(update: Update, context: CallbackContext) -> int:
     print(123)
     print(context.user_data)
     if 'EDIT_USER_ID' in context.user_data:
-    
         print('SKIP PHOTO DPLASJDAIOHAS9YW98FWYRQ98WFHESU89FHSA9FHD')
-        user_id_to_edit = context.user_data['EDIT_USER_ID'] 
-        user_data[user_id_to_edit].pop('PHOTO', None)
+        context.user_data.clear()
+
     update.message.reply_text("<b>Дякуємо, що залишили нову адресу. Ваша інформація буде перебувати на перевірці, і незабаром буде опублікована.</b>", parse_mode='HTML')
     user_id = update.message.chat_id  # Capture user_id
     save_user_data(user_id)  # Pass user_id to function
-    return ConversationHandler.END
+    return CallbackQueryHandler.END
 
 def cancel(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Отменено.', reply_markup=ReplyKeyboardRemove())
-    return ConversationHandler.END
-
-def edit_address(update: Update, context: CallbackContext) -> int:
-    user_id = update.message.chat_id
-    user_id_to_edit = user_data[user_id]['EDIT_USER_ID']
-    if user_id_to_edit in user_data:
-        user_data[user_id]['is_editing'] = True
-        update.message.reply_text("Введите новый точный адрес (обязательно):")
-        return EXACT_ADDRESS
-    else:
-        update.message.reply_text("Пользователь не найден.")
-        return ConversationHandler.END
 
 def main() -> None:
     updater = Updater("6868089807:AAEJbKT7t1-w4WK05wkOTqigL7cQ5HE0ohM")
@@ -708,24 +810,16 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[
             MessageHandler(Filters.regex('^Повідомити нову адресу$'), new_address),
-            MessageHandler(Filters.regex('^Редактировать адрес$'), edit_address),
+            CallbackQueryHandler(button, pattern='^yr_')  # Добавлен YR как точка входа
         ],
         states={
             EXACT_ADDRESS: [MessageHandler(Filters.text & ~Filters.command, exact_address)],
             DETAILS: [MessageHandler(Filters.text & ~Filters.command, details), CallbackQueryHandler(button, pattern='^skip_details$')],
-            PHOTO: [MessageHandler(Filters.all, photo), CallbackQueryHandler(button, pattern='^skip_photo$')],
+            PHOTO: [MessageHandler(Filters.all, photo), CallbackQueryHandler(button, pattern='^skip_photo$')]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
-    conv_handler2 = ConversationHandler(
-        entry_points=[CallbackQueryHandler(button, pattern='^yr')],
-        states={
-            EXACT_ADDRESS: [MessageHandler(Filters.text & ~Filters.command, exact_address)],
-            DETAILS: [MessageHandler(Filters.text & ~Filters.command, details)],
-            PHOTO: [MessageHandler(Filters.all, updaterPhoto), CommandHandler('skip', skip_photo)],
-        },
-        fallbacks=[CommandHandler('cancel', cancel)]
-    )
+
     conv_handler_broadcast = ConversationHandler(
         entry_points=[MessageHandler(Filters.regex('^Рассылка модератором$'), broadcast_moderator)],
         states={
@@ -749,9 +843,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("city", city))
     dispatcher.add_handler(conv_handler_message)
-    dispatcher.add_handler(conv_handler2)
     dispatcher.add_handler(conv_handler)
-    dispatcher.add_handler(CallbackQueryHandler(button))
+    dispatcher.add_handler(CallbackQueryHandler(button))  # Добавлен в конце
     dispatcher.add_error_handler(error_handler)
 
 
